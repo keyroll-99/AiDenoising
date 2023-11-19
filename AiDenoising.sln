@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34310.174
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AiDenoising", "AiDenoising\AiDenoising.csproj", "{B5C635C9-EC87-4AB2-A80A-C700C769D536}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleStartup", "ConsoleStartup\ConsoleStartup.csproj", "{D4A426CD-CAB8-4953-9EF3-0FDC6234A8BD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AiDenoisingUi", "AiDenoisingUi\AiDenoisingUi.csproj", "{810013B5-4EAD-4972-BC21-93DCD58FCB2B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B5C635C9-EC87-4AB2-A80A-C700C769D536}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5C635C9-EC87-4AB2-A80A-C700C769D536}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5C635C9-EC87-4AB2-A80A-C700C769D536}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5C635C9-EC87-4AB2-A80A-C700C769D536}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4A426CD-CAB8-4953-9EF3-0FDC6234A8BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4A426CD-CAB8-4953-9EF3-0FDC6234A8BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4A426CD-CAB8-4953-9EF3-0FDC6234A8BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4A426CD-CAB8-4953-9EF3-0FDC6234A8BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{810013B5-4EAD-4972-BC21-93DCD58FCB2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{810013B5-4EAD-4972-BC21-93DCD58FCB2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{810013B5-4EAD-4972-BC21-93DCD58FCB2B}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{810013B5-4EAD-4972-BC21-93DCD58FCB2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{810013B5-4EAD-4972-BC21-93DCD58FCB2B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

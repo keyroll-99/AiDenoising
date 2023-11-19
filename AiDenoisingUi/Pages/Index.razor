@@ -1,0 +1,44 @@
+﻿@page "/"
+@using Blazor.Extensions.Canvas
+@using Blazor.Extensions.Canvas.Canvas2D
+@using Blazor.Extensions
+
+<div class="container">
+    <div class="canvas" @onclick="PointerDown">
+        <BECanvas Width="500" Height="500" @ref="DrawCanvas"></BECanvas>
+    </div>
+    <div class="line"></div>
+    <div class="canvas">
+        <BECanvas Width="500" Height="500" @ref="ResultCanvas"></BECanvas>
+    </div>
+</div>
+
+
+@code{
+    private Canvas2DContext _drawCanvasContext;
+    private Canvas2DContext _resultCanvasContext;
+
+    protected BECanvasComponent DrawCanvas;
+    protected BECanvasComponent ResultCanvas;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        _drawCanvasContext = await this.DrawCanvas.CreateCanvas2DAsync();
+        _resultCanvasContext = await ResultCanvas.CreateCanvas2DAsync();
+
+
+        await _drawCanvasContext.SetFillStyleAsync("black");
+        await _drawCanvasContext.FillRectAsync(0, 0, 10, 10);
+
+    }
+
+    async Task PointerDown(MouseEventArgs e)
+    {
+        Console.WriteLine(e.ScreenX);
+        Console.WriteLine(e.ScreenY);
+
+        await _drawCanvasContext.FillRectAsync(e.OffsetX, e.OffsetY, 10, 10);
+    }
+
+}
