@@ -2,6 +2,8 @@
 @using Blazor.Extensions.Canvas
 @using Blazor.Extensions.Canvas.Canvas2D
 @using Blazor.Extensions
+@using AiDenoisingUi.Data
+@inject DenoisingService DenoisingService
 
 <div class="container">
     <div class="canvas" @onclick="PointerDown">
@@ -13,32 +15,96 @@
     </div>
 </div>
 
+<button @onclick="Denoising">Denoising</button>
+<button @onclick="Learn">Learn</button>
+@if (isLearn)
+{
+    <p>Learning...</p>
+}
 
 @code{
+    private const int BoxSize = 10;
+    private const int Width = 50;
+    private const int Height = 50;
+    private bool isLearn = false;
+    
+    private bool _imageRendered = true;
+    private ImageType _currentImage = ImageType.SmileFace;
+    
+    private List<int> _drawImage = new();
+    private List<int> _resultImage = new();
+
     private Canvas2DContext _drawCanvasContext;
     private Canvas2DContext _resultCanvasContext;
 
     protected BECanvasComponent DrawCanvas;
     protected BECanvasComponent ResultCanvas;
 
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _drawCanvasContext = await this.DrawCanvas.CreateCanvas2DAsync();
+        _drawCanvasContext = await DrawCanvas.CreateCanvas2DAsync();
         _resultCanvasContext = await ResultCanvas.CreateCanvas2DAsync();
 
+        if (_imageRendered)
+        {
+            await _drawCanvasContext.SetFillStyleAsync("black");
+            await _resultCanvasContext.SetFillStyleAsync("black");
+            var image = await DenoisingService.LoadImage(_currentImage);
 
-        await _drawCanvasContext.SetFillStyleAsync("black");
-        await _drawCanvasContext.FillRectAsync(0, 0, 10, 10);
-
+            for (var y = 0; y < Height; y++)
+            {
+                for (var x = 0; x < Width; x++)
+                {
+                    var value = image[(y * Width) + x];
+                    if (value == 1)
+                    {
+                        await _drawCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
+                        await _resultCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
+                    }
+                    _drawImage.Add(value);
+                    _resultImage.Add(value);
+                }
+            }
+            _imageRendered = false;
+        }
+        await _drawCanvasContext.SetFillStyleAsync("white");
+        await _resultCanvasContext.SetFillStyleAsync("white");
     }
-
+    
     async Task PointerDown(MouseEventArgs e)
     {
-        Console.WriteLine(e.ScreenX);
-        Console.WriteLine(e.ScreenY);
+        var x = Math.Floor(e.OffsetX / 10);
+        var y = Math.Floor(e.OffsetY / 10);
 
-        await _drawCanvasContext.FillRectAsync(e.OffsetX, e.OffsetY, 10, 10);
+        await _drawCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
+        _drawImage[(int)((y * Width) + x)] = 0;
+    }
+
+    async Task Denoising()
+    {
+        _resultImage = await DenoisingService.Denoising(_currentImage, _drawImage) as List<int>;
+        await _resultCanvasContext.SetFillStyleAsync("black");
+        for (var y = 0; y < Height; y++)
+        {
+            for (var x = 0; x < Width; x++)
+            {
+                var value = _resultImage[(y * Width) + x];
+                if (value == 1)
+                {
+                    await _drawCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
+                    await _resultCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
+                }
+                _drawImage.Add(value);
+                _resultImage.Add(value);
+            }
+        }
+    }
+
+    async Task Learn()
+    {
+        isLearn = true;
+        await DenoisingService.Learn(_currentImage);
+        isLearn = false;
     }
 
 }

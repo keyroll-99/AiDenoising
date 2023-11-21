@@ -51,7 +51,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Data\" />
       <Folder Include="Resources\Images\" />
     </ItemGroup>
 

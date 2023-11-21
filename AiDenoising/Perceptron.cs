@@ -34,7 +34,7 @@ public class Perceptron
         var path = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
         var file = Directory
             .EnumerateFiles($"{path}{Path.DirectorySeparatorChar}Images{Path.DirectorySeparatorChar}{RecognizedImage}")
-            .FirstOrDefault(file => file.Split("\\").Last()[0] == '0');
+            .FirstOrDefault(file => file.Split(Path.DirectorySeparatorChar).Last()[0] == '0');
 
         var parseImageData = ParseImage(file);
         OriginalImage = parseImageData;

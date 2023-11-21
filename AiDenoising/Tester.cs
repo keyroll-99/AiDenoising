@@ -72,26 +72,8 @@ public class Tester
 
         foreach (var file in files)
         {
-            _testCases.Add(await ParseImage(file));
+            _testCases.Add(await ImageLoader.ParseImage(file));
         }
     }
-
-    private static async Task<IList<int>> ParseImage(string file)
-    {
-        var image = await Image.LoadAsync<Rgba32>(file);
-        var parseImageData = new List<int>();
-        image.ProcessPixelRows(accessor =>
-        {
-            for (var y = 0; y < accessor.Height; y++)
-            {
-                var pixelRow = accessor.GetRowSpan(y);
-                foreach (ref var pixel in pixelRow)
-                {
-                    var color = (pixel.R + pixel.G + pixel.B) / 3;
-                    parseImageData.Add(pixel.A > 0 && color < 127 ? 1 : 0);
-                }
-            }
-        });
-        return parseImageData;
-    }
+    
 }

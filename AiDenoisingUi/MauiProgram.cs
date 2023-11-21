@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AiDenoisingUi.Data;
+using Microsoft.Extensions.Logging;
 
 namespace AiDenoisingUi;
 
@@ -17,7 +18,8 @@ public static class MauiProgram
         builder.Services.AddBlazorWebViewDeveloperTools();
         builder.Logging.AddDebug();
 #endif
-
+        builder.Services.AddSingleton<DenoisingService>();
+        
         return builder.Build();
     }
 }
