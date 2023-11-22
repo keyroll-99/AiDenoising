@@ -27,10 +27,10 @@
     private const int Width = 50;
     private const int Height = 50;
     private bool isLearn = false;
-    
-    private bool _imageRendered = true;
+
+    private bool _renderImage = true;
     private ImageType _currentImage = ImageType.SmileFace;
-    
+
     private List<int> _drawImage = new();
     private List<int> _resultImage = new();
 
@@ -40,62 +40,99 @@
     protected BECanvasComponent DrawCanvas;
     protected BECanvasComponent ResultCanvas;
 
+
+    protected override async Task OnInitializedAsync()
+    {
+        _drawImage = await DenoisingService.LoadImage(_currentImage) as List<int>;
+        _resultImage = await DenoisingService.LoadImage(_currentImage) as List<int>;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         _drawCanvasContext = await DrawCanvas.CreateCanvas2DAsync();
         _resultCanvasContext = await ResultCanvas.CreateCanvas2DAsync();
 
-        if (_imageRendered)
+        if (_renderImage)
         {
-            await _drawCanvasContext.SetFillStyleAsync("black");
-            await _resultCanvasContext.SetFillStyleAsync("black");
-            var image = await DenoisingService.LoadImage(_currentImage);
 
             for (var y = 0; y < Height; y++)
             {
                 for (var x = 0; x < Width; x++)
                 {
-                    var value = image[(y * Width) + x];
-                    if (value == 1)
+
+                    if (_drawImage[(y * Width) + x] == 1)
                     {
-                        await _drawCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
-                        await _resultCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
+                        await _drawCanvasContext.SetFillStyleAsync("black");
                     }
-                    _drawImage.Add(value);
-                    _resultImage.Add(value);
+                    else
+                    {
+                        await _drawCanvasContext.SetFillStyleAsync("white");
+                    }
+                    if (_resultImage[(y * Width) + x] == 1)
+                    {
+                        await _resultCanvasContext.SetFillStyleAsync("black");
+                    }
+                    else
+                    {
+                        await _resultCanvasContext.SetFillStyleAsync("white");
+                    }
+                    await _drawCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
+                    await _resultCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
+
+            
                 }
             }
-            _imageRendered = false;
+            _renderImage = false;
         }
-        await _drawCanvasContext.SetFillStyleAsync("white");
-        await _resultCanvasContext.SetFillStyleAsync("white");
     }
-    
+
     async Task PointerDown(MouseEventArgs e)
     {
         var x = Math.Floor(e.OffsetX / 10);
         var y = Math.Floor(e.OffsetY / 10);
-
+        await _drawCanvasContext.SetFillStyleAsync("white");
         await _drawCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
+
         _drawImage[(int)((y * Width) + x)] = 0;
     }
 
     async Task Denoising()
     {
         _resultImage = await DenoisingService.Denoising(_currentImage, _drawImage) as List<int>;
-        await _resultCanvasContext.SetFillStyleAsync("black");
+
         for (var y = 0; y < Height; y++)
         {
             for (var x = 0; x < Width; x++)
             {
                 var value = _resultImage[(y * Width) + x];
-                if (value == 1)
+                _drawImage[(y * Width) + x] = value;
+                _resultImage[(y * Width) + x] = value;
+            }
+        }
+
+        for (var y = 0; y < Height; y++)
+        {
+            for (var x = 0; x < Width; x++)
+            {
+
+                if (_drawImage[(y * Width) + x] == 1)
                 {
-                    await _drawCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
-                    await _resultCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
+                    await _drawCanvasContext.SetFillStyleAsync("black");
                 }
-                _drawImage.Add(value);
-                _resultImage.Add(value);
+                else
+                {
+                    await _drawCanvasContext.SetFillStyleAsync("white");
+                }
+                if (_resultImage[(y * Width) + x] == 1)
+                {
+                    await _resultCanvasContext.SetFillStyleAsync("black");
+                }
+                else
+                {
+                    await _resultCanvasContext.SetFillStyleAsync("white");
+                }
+                await _drawCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
+                await _resultCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
             }
         }
     }
