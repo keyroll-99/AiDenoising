@@ -7,26 +7,46 @@
 
 <div class="container">
     <div class="canvas" @onclick="PointerDown">
-        <BECanvas Width="500" Height="500" @ref="DrawCanvas"></BECanvas>
+        <BECanvas Width="500" Height="500" @ref="_drawCanvas"></BECanvas>
     </div>
     <div class="line"></div>
     <div class="canvas">
-        <BECanvas Width="500" Height="500" @ref="ResultCanvas"></BECanvas>
+        <BECanvas Width="500" Height="500" @ref="_resultCanvas"></BECanvas>
     </div>
 </div>
 
 <button @onclick="Denoising">Denoising</button>
 <button @onclick="Learn">Learn</button>
-@if (isLearn)
+<input @bind="_brushSize"  type="number" />
+
+<InputSelect @bind-Value="_currentImage">
+  
+    @foreach (var imageType in Enum.GetValues(typeof(ImageType)))
+    {
+    
+        <option value="@imageType">@imageType</option>
+    }
+</InputSelect>
+<button @onclick="ChangeImage">load image</button>
+@if (_isLearn)
 {
     <p>Learning...</p>
+}
+
+@if (_showLoader)
+{
+    <p>Loading...</p>
 }
 
 @code{
     private const int BoxSize = 10;
     private const int Width = 50;
     private const int Height = 50;
-    private bool isLearn = false;
+
+    private bool _isLearn = false;
+    private bool _showLoader = false;
+    private bool _blockDrawing = false;
+    private int _brushSize = 1;
 
     private bool _renderImage = true;
     private ImageType _currentImage = ImageType.SmileFace;
@@ -37,8 +57,8 @@
     private Canvas2DContext _drawCanvasContext;
     private Canvas2DContext _resultCanvasContext;
 
-    protected BECanvasComponent DrawCanvas;
-    protected BECanvasComponent ResultCanvas;
+    private BECanvasComponent _drawCanvas;
+    private BECanvasComponent _resultCanvas;
 
 
     protected override async Task OnInitializedAsync()
@@ -49,12 +69,13 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _drawCanvasContext = await DrawCanvas.CreateCanvas2DAsync();
-        _resultCanvasContext = await ResultCanvas.CreateCanvas2DAsync();
+        _drawCanvasContext = await _drawCanvas.CreateCanvas2DAsync();
+        _resultCanvasContext = await _resultCanvas.CreateCanvas2DAsync();
 
         if (_renderImage)
         {
-
+            _blockDrawing = true;
+            _showLoader = true;
             for (var y = 0; y < Height; y++)
             {
                 for (var x = 0; x < Width; x++)
@@ -79,25 +100,70 @@
                     await _drawCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
                     await _resultCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
 
-            
+
                 }
             }
+            _blockDrawing = false;
+            _showLoader = false;
             _renderImage = false;
         }
     }
 
     async Task PointerDown(MouseEventArgs e)
     {
-        var x = Math.Floor(e.OffsetX / 10);
-        var y = Math.Floor(e.OffsetY / 10);
-        await _drawCanvasContext.SetFillStyleAsync("white");
-        await _drawCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
+        try
+        {
+            if (_blockDrawing)
+            {
+                return;
+            }
+            var x = Math.Floor(e.OffsetX / 10) - (_brushSize / 2);
+            var y = Math.Floor(e.OffsetY / 10) - (_brushSize / 2);
+            await _drawCanvasContext.SetFillStyleAsync("white");
 
-        _drawImage[(int)((y * Width) + x)] = 0;
+
+            for (var yy = y; (yy < y + _brushSize) && yy < Height; yy++)
+            {
+                if(yy < 0)
+                {
+                    continue;
+                }
+                for (var xx = x; xx < x + _brushSize && xx < Width; xx++)
+                {
+                    if(xx < 0)
+                    {
+                        continue;
+                    }
+                    _drawImage[(int)((yy * Width) + xx)] = 0;
+                    await _drawCanvasContext.FillRectAsync(xx * 10, yy * 10, BoxSize, BoxSize);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        } 
+    }
+
+    async Task ChangeImage()
+    {
+        _drawImage = await DenoisingService.LoadImage(_currentImage) as List<int>;
+        _resultImage = await DenoisingService.LoadImage(_currentImage) as List<int>;
+        await _drawCanvasContext.SetFillStyleAsync("white");
+
+        await _drawCanvasContext.FillAsync();
+        await _resultCanvasContext.FillAsync();
+        _renderImage = true;
     }
 
     async Task Denoising()
     {
+        if (_blockDrawing)
+        {
+            return;
+        }
+        _blockDrawing = true;
+        _showLoader = true;
         _resultImage = await DenoisingService.Denoising(_currentImage, _drawImage) as List<int>;
 
         for (var y = 0; y < Height; y++)
@@ -132,16 +198,18 @@
                     await _resultCanvasContext.SetFillStyleAsync("white");
                 }
                 await _drawCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
-                await _resultCanvasContext.FillRectAsync(x * 10, y * 10, BoxSize, BoxSize);
             }
         }
+        _blockDrawing = false;
+        _showLoader = false;
+
     }
 
     async Task Learn()
     {
-        isLearn = true;
+        _isLearn = true;
         await DenoisingService.Learn(_currentImage);
-        isLearn = false;
+        _isLearn = false;
     }
 
 }

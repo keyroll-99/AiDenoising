@@ -9,10 +9,16 @@ public class DenoisingService
 
     public DenoisingService()
     {
-        _perceptrons[ImageType.SmileFace] = new List<Perceptron> ();
+        foreach (ImageType imageType in Enum.GetValues(typeof(ImageType)))
+        {
+            _perceptrons[imageType] = new List<Perceptron>();
+        }
         for (var i = 0; i < 50 * 50; i++)
         {
-            _perceptrons[ImageType.SmileFace].Add(new Perceptron(Enum.GetName(ImageType.SmileFace), i));
+            foreach (ImageType imageType in Enum.GetValues(typeof(ImageType)))
+            {
+                _perceptrons[imageType].Add(new Perceptron(Enum.GetName(imageType), i));
+            }
         }
     }
 

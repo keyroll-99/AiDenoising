@@ -2,5 +2,6 @@ namespace AiDenoisingUi.Data;
 
 public enum ImageType
 {
-    SmileFace
+    SmileFace,
+    House
 }
