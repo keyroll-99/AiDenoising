@@ -34,7 +34,7 @@ public class DenoisingService
         await Task.WhenAll(tasks);
     }
 
-    public async Task<IList<int>> Denoising(ImageType imageType, IList<int> data)
+    public async Task<IList<int>> Denoise(ImageType imageType, IList<int> data)
     {
         return _perceptrons[imageType].Select(perceptron => perceptron.Predict(data)).ToList();
     }
