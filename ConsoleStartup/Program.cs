@@ -8,7 +8,7 @@ using SixLabors.ImageSharp.PixelFormats;
 var perceptrons = new List<Perceptron>();
 for (var i = 0; i < (50 * 50); i++)
 {
-    var perceptron = new Perceptron(Enum.GetName(ImageType.House), i);
+    var perceptron = new Perceptron(Enum.GetName(ImageType.Mountain), i);
     perceptrons.Add(perceptron);
 }
 
