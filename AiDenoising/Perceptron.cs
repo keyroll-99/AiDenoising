@@ -1,27 +1,25 @@
 using System.Net.Mime;
 using System.Reflection;
+using AiDenoisingUi.Data;
 
 namespace AiDenoising;
 
 public class Perceptron
 {
-    public string RecognizedImage { get; }
-    public IList<int> OriginalImage { get; }
-
     private const double LearningConst = 0.1;
     private readonly Random _random;
     private IList<double> _weights = new List<double>();
-    private readonly IList<IList<int>> _learningData = new List<IList<int>>();
+
     private double _biasWeight;
     private readonly double _threshold;
     private readonly int _pixelIndex;
+    private ImageLoader _imageLoader;
 
 
-    public Perceptron(string recognizedImage, int pixelIndex, int imageWidth = 50, int imageHeight = 50)
+    public Perceptron(int pixelIndex, ImageLoader imageLoader, int imageWidth = 50, int imageHeight = 50)
     {
         _pixelIndex = pixelIndex;
         _random = new Random();
-        RecognizedImage = recognizedImage;
         _biasWeight = _random.NextDouble() * 2 - 1;
         for (var i = 0; i < (imageHeight * imageWidth); i++)
         {
@@ -29,27 +27,15 @@ public class Perceptron
             _weights.Add(randomWeight);
         }
 
+        _imageLoader = imageLoader;
         _threshold = 0;
-
-        var path = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
-        var file = Directory
-            .EnumerateFiles($"{path}{Path.DirectorySeparatorChar}Images{Path.DirectorySeparatorChar}{RecognizedImage}")
-            .FirstOrDefault(file => file.Split(Path.DirectorySeparatorChar).Last()[0] == '0');
-
-        var parseImageData = ParseImage(file);
-        OriginalImage = parseImageData;
     }
 
-    public override string ToString()
-    {
-        return $"-{RecognizedImage}-";
-    }
 
-    public void Train()
+    public async Task Train()
     {
-        Console.WriteLine($"Train {RecognizedImage}");
-        LoadLearningData();
-
+        Console.WriteLine($"Start learn pixel {_pixelIndex}");
+        
         var i = 0L;
         var maxLifeTime = 0;
         var currentLifeTime = 0;
@@ -57,12 +43,14 @@ public class Perceptron
         var biasFromMaxLifeTime = 0D;
         while (i <= 10_000)
         {
-            var learningIndex = RandomNextIndexOfLearningData();
-            var learningCase = _learningData[learningIndex];
+            var values = Enum.GetValues(typeof(ImageType));
+            var randomImageType = (ImageType)values.GetValue(_random.Next(values.Length));
+            var learningIndex = RandomNextIndexOfLearningData(randomImageType);
+            var learningCase = _imageLoader.LearningData[randomImageType][learningIndex];
 
-            var target = OriginalImage[_pixelIndex];
+            var target = (await _imageLoader.GetMainImage(randomImageType))[_pixelIndex];
             var error = GetError(learningCase, target);
- 
+
 
             if (error == 0)
             {
@@ -87,6 +75,7 @@ public class Perceptron
                 currentLifeTime = 0;
             }
 
+
             i++;
         }
 
@@ -100,7 +89,7 @@ public class Perceptron
         _weights = weights.Select(x => x).ToList();
         _biasWeight = biasFromMaxLifeTime;
 
-        Console.WriteLine($"Max lifetime for {RecognizedImage} is {maxLifeTime}");
+        Console.WriteLine($"Max lifetime for {_pixelIndex} is {maxLifeTime}");
         Console.WriteLine("end");
     }
 
@@ -124,21 +113,6 @@ public class Perceptron
         return target - guess;
     }
 
-    private void LoadLearningData()
-    {
-        var path = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
-
-
-        var files = Directory.EnumerateFiles(
-            $"{path}{Path.DirectorySeparatorChar}Images{Path.DirectorySeparatorChar}{RecognizedImage}");
-
-        foreach (var file in files)
-        {
-            var parseImageData = ParseImage(file);
-
-            _learningData.Add(parseImageData);
-        }
-    }
 
     private static IList<int> ParseImage(string file)
     {
@@ -160,8 +134,8 @@ public class Perceptron
     }
 
 
-    private int RandomNextIndexOfLearningData()
+    private int RandomNextIndexOfLearningData(ImageType imageType)
     {
-        return _random.Next(0, _learningData.Count);
+        return _random.Next(0, _imageLoader.LearningData[imageType].Count);
     }
 }

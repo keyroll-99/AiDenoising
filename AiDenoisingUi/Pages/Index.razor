@@ -169,7 +169,7 @@ recursion: <input type="checkbox" @bind="_recursion"/>
         var isEqualOriginal = false;
         do
         {
-            var  result = await DenoisingService.Denoise(_currentImage, _drawImage) as List<int>;
+            var  result = await DenoisingService.Denoise(_drawImage) as List<int>;
 
             for (var y = 0; y < Height; y++)
             {
@@ -206,7 +206,7 @@ recursion: <input type="checkbox" @bind="_recursion"/>
     async Task Learn()
     {
         _isLearn = true;
-        await DenoisingService.Learn(_currentImage);
+        await DenoisingService.Learn();
         _isLearn = false;
     }
 

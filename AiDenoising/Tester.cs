@@ -1,35 +1,40 @@
 using System.Reflection;
+using AiDenoisingUi.Data;
 
 namespace AiDenoising;
 
 public class Tester
 {
     private readonly IList<Perceptron> _perceptrons;
-    private readonly string _imageType;
+    private readonly ImageType _imageType;
     private readonly List<IList<int>> _testCases = new();
     private readonly Rgba32 _black = new(0, 0, 0);
     private readonly Rgba32 _white = new(255, 255, 255);
 
     private const int ImageWidth = 50;
 
-    public Tester(IList<Perceptron> perceptrons, string imageType)
+    public Tester(IList<Perceptron> perceptrons, ImageType imageType)
     {
         _perceptrons = perceptrons;
         _imageType = imageType;
     }
 
-    public async Task Test()
+    public async Task Test(ImageLoader imageLoader)
     {
         await LoadTestImages();
-        var tasks = _testCases.Select((t, i) => Task.Run(() => Test(t, i))).ToList();
+        var tasks = _testCases.Select((x, i) => Test(x, i, imageLoader)).ToList();
+
 
         await Task.WhenAll(tasks);
     }
 
-    private void Test(IList<int> testCase, int index)
+    private async Task Test(IList<int> testCase, int index, ImageLoader imageLoader)
     {
         var correctPixel = 0;
-        var originalImage = _perceptrons[0].OriginalImage;
+
+        var path = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
+
+        var originalImage = await imageLoader.GetMainImage(_imageType);
         var resultImage = new List<int>();
         for (var i = 0; i < (50 * 50); i++)
         {
@@ -43,7 +48,6 @@ public class Tester
         }
 
         Console.WriteLine($"Test case {index} - Correct pixels {correctPixel} with {50 * 50}");
-        var path = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
 
 
         using var image = new Image<Rgba32>(50, 50);
@@ -72,7 +76,7 @@ public class Tester
 
         foreach (var file in files)
         {
-            _testCases.Add(await ImageLoader.ParseImage(file));
+            _testCases.Add(ImageLoader.ParseImage(file));
         }
     }
     

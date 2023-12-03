@@ -6,18 +6,26 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 var perceptrons = new List<Perceptron>();
+var tasks = new List<Task>();
+var imageLoader = new ImageLoader();
+
 for (var i = 0; i < (50 * 50); i++)
 {
-    var perceptron = new Perceptron(Enum.GetName(ImageType.Mountain), i);
+    var perceptron = new Perceptron(i, imageLoader);
     perceptrons.Add(perceptron);
+    tasks.Add(perceptron.Train());
 }
 
-var tasks = perceptrons.Select(perceptron => Task.Run(perceptron.Train)).ToList();
 await Task.WhenAll(tasks);
 
-var tester = new Tester(perceptrons, "SmileFace");
+foreach (var imageName in Enum.GetValues(typeof(ImageType)).Cast<ImageType>())
+{
+    var tester = new Tester(perceptrons, imageName);
 
-await tester.Test();
+    await tester.Test(imageLoader);
+
+}
+
 
 //
 // foreach (var perceptron in perceptrons)
